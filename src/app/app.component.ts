@@ -6,6 +6,7 @@ import {
   OnInit,
   signal,
 } from '@angular/core';
+import { toObservable } from '@angular/core/rxjs-interop';
 import { filter, interval, map } from 'rxjs';
 
 @Component({
@@ -16,11 +17,12 @@ import { filter, interval, map } from 'rxjs';
 export class AppComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
   clickCount = signal(0);
+  clickCount$ = toObservable(this.clickCount);
 
   constructor() {
-    effect(() => {
-      console.log(`Clicked: ${this.clickCount()} times.`);
-    });
+    // effect(() => {
+    //   console.log(`Clicked: ${this.clickCount()} times.`);
+    // });
   }
 
   ngOnInit(): void {
@@ -36,6 +38,14 @@ export class AppComponent implements OnInit {
     //   });
     // // Unsubscribe when the component is destroyed
     // this.destroyRef.onDestroy(() => subscription.unsubscribe());
+
+    const subscription = this.clickCount$.subscribe({
+      next: (count) => console.log(`Clicked: ${count} times`),
+      complete: () => console.log('Click count complete'),
+      error: (error) => console.error('An error occurred:', error),
+    });
+
+    this.destroyRef.onDestroy(() => subscription.unsubscribe());
   }
 
   onClick() {
